@@ -9,27 +9,33 @@ const handlelogin = async (req, res) => {
         const result = await pool.query("SELECT * FROM USERS WHERE username = $1", [username]);
 
         if (result.rowCount != 1) {
-            return res.json({ Message: "User Not Found" });
+            return res.json({ Message: "User Not Found", status: "Fail" });
         }
 
         const isMatch = await bcrypt.compare(password, result.rows[0].password);
 
         if (!isMatch) {
-            return res.json({ Message: " Password Incorrect " });
+            return res.json({ Message: " Password Incorrect ", status: "Fail" });
         }
-        console.log(result.rows[0].userid)
+
         const token = jwt.sign(result.rows[0].userid, process.env.JWT_SECRET);
 
-        console.log(token);
         if (!token) {
-            return res.json({ Message: "Login Fail" })
+            return res.json({ Message: "Login Fail", status: "Fail" })
         }
 
-        res.json({ token });
+        res.cookie('JWT_token', token, {
+            httpOnly: "true",
+            maxAge: 3600000
+        });
+        res.json({
+            Message: "Login Successful ",
+            token, status: "Success"
+        });
 
     } catch (err) {
         console.log(err);
-        res.json({ Message: "Login Fail Error" })
+        res.json({ Message: "Login Fail Error", status: "Fail" })
     }
 };
 
@@ -43,7 +49,7 @@ const handleregister = async (req, res) => {
         let result = await pool.query("SELECT * FROM  USERS WHERE username = $1 OR email = $2 OR password = $3", [username, email, hashpassword]);
 
         if (result.rowCount != 0) {
-            return res.json({ Message: "Cridentials already Exit" })
+            return res.json({ Message: "Cridentials already Exit", status: "Fail" })
         }
 
         result = await pool.query(
@@ -53,14 +59,14 @@ const handleregister = async (req, res) => {
 
         if (result.rowCount != 1) {
             console.log('not')
-            return res.json({ Message: " Registration Fail " })
+            return res.json({ Message: " Registration Fail ", status: "Fail" })
         }
 
-        res.json({ Message: "User Register Successful" });
+        res.json({ Message: "User Register Successful", status: "Success" });
         console.log("handleregister");
 
     } catch (err) {
-        res.json({ Message: " Registration Fail Error" })
+        res.json({ Message: " Registration Fail Error", status: "Fail" })
         console.error(err);
     }
 };

@@ -17,9 +17,7 @@
         border-radius: 4px;
       }
 
-      input[type="email"],
-      input[type="password"],
-      input[type="text"] {
+      input {
         width: 100%;
         padding: 12px 20px;
         margin: 8px 0;
@@ -71,13 +69,13 @@
 
   <body onload="login()">
     <div class="container">
-      <form id="loginForm">
+      <form id="login_form">
         <h2>Login</h2>
-        <p id="loginmessage"></p>
+        <p id="login_message"></p>
         <input
-          type="email"
+          type="name"
           id="loginUsername"
-          name="email"
+          name="username"
           placeholder="Username"
           required
         />
@@ -91,7 +89,7 @@
         <button type="submit">Login</button>
       </form>
 
-      <form id="signupForm">
+      <form id="signup_form">
         <h2>Signup</h2>
         <p id="message"></p>
         <input
@@ -117,7 +115,7 @@
         />
         <input
           type="password"
-          name="conformpassword"
+          name="conform_password"
           id="signupPassword"
           placeholder="Confirm Password"
           required
@@ -143,29 +141,36 @@
     </div>
   </body>
   <script>
+    const login_form = document.getElementById("login_form");
+    const signup_form = document.getElementById("signup_form");
+    const btnlogin = document.getElementById("lo");
+    const btnsignup = document.getElementById("si");
+
     function login() {
-      document.getElementById("signupForm").style.display = "none";
-      document.getElementById("lo").style.visibility = "hidden";
-      document.getElementById("loginForm").style.display = "block";
-      document.getElementById("si").style.visibility = "visible";
+      signup_form.style.display = "none";
+      btnlogin.style.visibility = "hidden";
+      login_form.style.display = "block";
+      btnsignup.style.visibility = "visible";
     }
     function signup() {
-      document.getElementById("loginForm").style.display = "none";
-      document.getElementById("si").style.visibility = "hidden";
-      document.getElementById("signupForm").style.display = "block";
-      document.getElementById("lo").style.visibility = "visible";
+      login_form.style.display = "none";
+      btnsignup.style.visibility = "hidden";
+      signup_form.style.display = "block";
+      btnlogin.style.visibility = "visible";
     }
 
-    const sform = document.querySelector("#signupForm");
-    sform.addEventListener("submit", async (event) => {
+    signup_form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      handleSubmit();
+    });
 
-      const formdata = new FormData(sform);
-      console.log(formdata);
+    function handleSubmit() {
+      const message = document.getElementById("message");
+      const formdata = new FormData(signup_form);
       const data = Object.fromEntries(formdata);
-      if (data.password == data.conformpassword) {
+      if (data.password == data.conform_password) {
         console.log(data);
-        fetch(`/signup-post`, {
+        fetch("userAuth/register", {
           method: "post",
           headers: {
             "Content-Type": "application/json",
@@ -173,60 +178,53 @@
           body: JSON.stringify(data),
         })
           .then(async (res) => {
-            const data = await res.json();
-            console.log(data);
-            if (data.message == "Email Already Exist!") {
-              document.getElementById("message").innerHTML = data.message;
-              document.getElementById("message").style.color = "red";
-            } else {
-              document.getElementById("message").innerHTML = data.message;
-              document.getElementById("message").style.color = "green";
-            }
-            sform.reset();
-          }) // Corrected: added parentheses to call the method
-          // .then(data => console.log(data))
+            const response = await res.json();
+            console.log(response);
+            response.status == "Success"
+              ? (message.style.color = "green")
+              : (message.style.color = "red");
+            message.innerText = response.Message;
+            signup_form.reset();
+          })
           .catch((error) => {
             console.log(error);
           });
       } else {
-        document.getElementById("message").innerHTML =
-          "Password/ConformPassword Not Same";
-        document.getElementById("message").style.color = "red";
-        sform.reset();
+        message.innerHTML = "Password/ConformPassword Not Same";
+        message.style.color = "red";
+        signup_form.reset();
       }
+    }
+
+    login_form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      handleLoginSubmit();
     });
 
-    // function sendData(data) {
-
-    // }
-
-    const lform = document.getElementById("loginForm");
-    lform.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const formdata = new FormData(lform);
+    function handleLoginSubmit() {
+      const message = document.getElementById("login_message");
+      const formdata = new FormData(login_form);
       const data = Object.fromEntries(formdata);
       console.log(data);
-      fetch("/login", {
-        method: "put",
+      fetch("userAuth/login", {
+        method: "post",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       })
         .then(async (res) => {
-          const mes = await res.json();
-          console.log(mes);
-          if (mes.message == "Login Successful") {
-            document.getElementById("loginmessage").innerHTML = mes.message;
-            document.getElementById("loginmessage").style.color = "green";
-          } else {
-            document.getElementById("loginmessage").innerHTML = mes.message;
-            document.getElementById("loginmessage").style.color = "red";
-          }
+          const response = await res.json();
+          console.log(response);
+          response.status == "Success"
+            ? (message.style.color = "green")
+            : (message.style.color = "red");
+          message.innerText = response.Message;
+          login_form.reset();
         })
         .catch((error) => {
           console.log(error);
         });
-    });
+    }
   </script>
 </html>
